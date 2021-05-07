@@ -7,8 +7,7 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "npx eslint",
-    "deploy": "scp -r ./.env praktikum@84.252.133.61:/home/praktikum/movies-explorer-api"
+    "lint": "npx eslint"
   },
   "repository": {
     "type": "git",
