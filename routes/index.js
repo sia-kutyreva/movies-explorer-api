@@ -15,9 +15,11 @@ appRouter.post('/signup', createUserValidation, createUser);
 
 appRouter.post('/signin', loginValidation, login);
 
-appRouter.use('/users', auth, usersRoutes);
+appRouter.use(auth);
 
-appRouter.use('/movies', auth, moviesRoutes);
+appRouter.use('/users', usersRoutes);
+
+appRouter.use('/movies', moviesRoutes);
 
 appRouter.use('/*', () => {
   throw new NotFoundError('Запрашиваемый ресур не найден');

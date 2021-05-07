@@ -34,7 +34,7 @@ const createUserValidation = celebrate({
         'string.min': 'Пароль должен быть не менее 8 символов',
         'any.required': 'Обязательное поле',
       }),
-    name: Joi.string().min(2).max(30)
+    name: Joi.string().min(2).max(30).required()
       .messages({
         'string.min': 'Не менее 2-x символов',
         'string.max': 'Не более 30-x символов',
@@ -102,16 +102,19 @@ const createMovieValidation = celebrate({
 
 const updateUserValidation = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30)
+    name: Joi.string().min(2).max(30).required()
       .messages({
         'string.min': 'Не менее 2-x символов',
         'string.max': 'Не более 30-x символов',
       }),
-    email: Joi.string().min(2).max(30)
-      .messages({
-        'string.min': 'Не менее 2-x символов',
-        'string.max': 'Не более 30-x символов',
-      }),
+    email: Joi.string().required()
+      .custom((value, helper) => {
+        if (!validator.isEmail(value)) {
+          return helper.message('Некорректный email');
+        }
+        return value;
+      })
+      .messages({ 'any.required': 'Обязательное поле' }),
   }),
 });
 

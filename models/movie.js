@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const { messages } = require('../utils/constants');
+
 const movieSchema = new mongoose.Schema({
   country: {
     type: String,
@@ -14,10 +16,10 @@ const movieSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  year: [{
+  year: {
     type: String,
     required: true,
-  }],
+  },
   description: {
     type: String,
     required: true,
@@ -29,19 +31,19 @@ const movieSchema = new mongoose.Schema({
       validator(link) {
         return validator.isURL(link);
       },
-      massage: 'Некорректный URL изображения',
+      massage: messages.incorrectURL,
     },
   },
-  trailer: [{
+  trailer: {
     type: String,
     required: true,
     validation: {
       validator(link) {
         return validator.isURL(link);
       },
-      massage: 'Некорректный URL',
+      massage: messages.incorrectURL,
     },
-  }],
+  },
   thumbnail: {
     type: String,
     required: true,
@@ -49,7 +51,7 @@ const movieSchema = new mongoose.Schema({
       validator(link) {
         return validator.isURL(link);
       },
-      massage: 'Некорректный URL изображения',
+      massage: messages.incorrectURL,
     },
   },
   owner: {
@@ -57,10 +59,10 @@ const movieSchema = new mongoose.Schema({
     ref: 'user',
     required: true,
   },
-  movieId: [{
+  movieId: {
     type: Number,
     required: true,
-  }],
+  },
   nameRU: {
     type: String,
     required: true,

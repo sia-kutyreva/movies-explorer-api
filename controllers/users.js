@@ -3,8 +3,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
 const ConflictError = require('../errors/conflict-err');
+const BadRequestError = require('../errors/bad-request-err');
 
-const { SALT_ROUNDS, tokenStorageTime } = require('../utils/constants');
+const { SALT_ROUNDS, tokenStorageTime, messages } = require('../utils/constants');
 const { tokenKey } = require('../utils/configs');
 
 const createUser = (req, res, next) => {
@@ -14,7 +15,7 @@ const createUser = (req, res, next) => {
   User.findOne({ email })
     .then((user) => {
       if (user) {
-        throw new ConflictError('Пользователь с таким email уже существует');
+        throw new ConflictError(messages.conflictEmail);
       }
       return bcrypt.hash(password, SALT_ROUNDS)
         .then((hash) => User.create({
@@ -23,8 +24,7 @@ const createUser = (req, res, next) => {
           password: hash,
         })
           .then((data) => {
-            const token = jwt.sign({ _id: data._id }, tokenKey, { expiresIn: tokenStorageTime });
-            res.status(200).send({ email: data.email, token });
+            res.status(200).send({ email: data.email });
           })
           .catch(next));
     })
@@ -36,7 +36,7 @@ const login = (req, res, next) => {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, tokenKey, { expiresIn: tokenStorageTime });
-      res.send({ token });
+      res.status(200).send({ token });
     })
     .catch(next);
 };
@@ -45,22 +45,39 @@ const getUserProfile = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь по указанному _id не найден');
+        throw new NotFoundError(messages.notFoundUser);
       }
       res.status(200).send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        throw new BadRequestError(messages.invalidUserId);
+      }
+      return next(err);
     })
     .catch(next);
 };
 
 const updateUserProfile = (req, res, next) => {
   const id = req.user._id;
-  const { name, email } = req.body;
-  User.findByIdAndUpdate(id, { name, email }, { new: true, runValidators: true })
+  const { email, name } = req.body;
+  User.findByIdAndUpdate(id, { email, name }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь по указанному _id не найден');
+        throw new NotFoundError(messages.notFoundUser);
+      } else {
+        res.status(200).send(user);
       }
-      res.status(200).send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        throw new BadRequestError(messages.invalidUserData);
+      } else if (err.name === 'CastError') {
+        throw new BadRequestError(messages.invalidUserId);
+      } else if (err.codeName === 'DuplicateKey') {
+        throw new ConflictError(messages.conflictEmail);
+      }
+      return next(err);
     })
     .catch(next);
 };
